@@ -1,11 +1,15 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "workshop-marketplace",
   "description": "Build Your Idea workshop skills.",
+  "owner": {
+    "name": "VladChs"
+  },
   "plugins": [
     {
       "name": "workshop",
-      "source": ".",
-      "description": "Workshop pipeline + architecture reference"
+      "description": "Workshop pipeline + architecture reference for 4-hour workshop builds",
+      "source": "."
     }
   ]
 }
