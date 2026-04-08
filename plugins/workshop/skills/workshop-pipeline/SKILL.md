@@ -23,6 +23,8 @@ Verify the following are installed before the pipeline starts. If any are missin
 - `superpowers` (claude-plugins-official) — required, the pipeline wraps it.
 - `workshop-architecture` — required, ships in the same plugin as this skill.
 - `frontend-design` (claude-plugins-official) — required only for projects with a UI.
+- `vercel` CLI (`npm i -g vercel`) — **optional**, only required if the participant wants Extension I to deploy at the end. Authenticate with `vercel login` before the workshop starts.
+- `gh` CLI authenticated — required for Extension I (to create a GitHub repo if one does not exist) and already implied by the marketplace install.
 
 ## Pipeline map
 
@@ -56,6 +58,12 @@ Verify the following are installed before the pipeline starts. If any are missin
 ┌──────────────────────────────┐
 │ Simplified finishing         │   ← Extension F (replaces finishing-a-
 │ (RECAP.md)                   │      development-branch)
+└──────────────────────────────┘
+   │
+   ▼
+┌──────────────────────────────┐
+│ Vercel deploy (optional)     │   ← Extension I (opt-in, Vercel-fit
+│                              │      detected, wires GitHub auto-deploy)
 └──────────────────────────────┘
 ```
 
@@ -134,6 +142,89 @@ Interaction with `workshop-architecture/frontend.md`:
 - `frontend-design` controls **aesthetics** (typography, color, motion, layout).
 - Both apply to every component. Structure rules are blockers in review (Extension D); aesthetic rules are subjective and not enforced beyond "the direction was committed and followed consistently."
 
+## Extension I — Vercel deploy (optional)
+
+Apply ONLY if the participant opts in. Runs after Extension F has written `RECAP.md`. The recap always exists; the Live URL is appended on top only when the deploy succeeds. The pipeline ends here.
+
+### Detection — classify the project before prompting
+
+Read the spec and the project structure. Pick exactly one bucket.
+
+**Green — fits Vercel cleanly.** ALL of:
+- Frontend uses a Vercel-native framework (Next, Astro, SvelteKit, Nuxt, Vite + React/Vue/Svelte) OR is a static site.
+- Backend (if present) is Python or Node serverless functions in `api/` (FastAPI mounted as ASGI in `api/index.py`, Express, plain handlers).
+- DB (if present) is Vercel Postgres, Vercel KV, or an external managed service (Supabase, Neon, Upstash, PlanetScale).
+- Spec/code does NOT mention: websockets, long-running SSE, background workers, queues, cron jobs, persistent local filesystem, audio/video processing, requests longer than 10s, native binary deps over 50 MB.
+
+**Red — does NOT fit Vercel.** ANY of:
+- Spec or code uses websockets, queues, cron, background workers, or persistent local FS.
+- Backend is a long-running process (uvicorn started as a server, Django with file-backed sessions, Celery worker, etc.).
+- Native binary deps exceed Vercel's 50 MB unzipped function limit.
+- Sync work per request exceeds the hobby-tier 10s limit.
+
+**Yellow — unsure.** None of the above apply but you are not confident (e.g., unrecognized backend library). Treat as "ask the participant explicitly."
+
+### Three branches
+
+**Green path:**
+
+1. Prompt the participant: *"Your build looks Vercel-ready. Deploy it now? It takes ~2 minutes and you'll get a live URL with auto-deploy wired up. (yes / no)"*
+2. If `no` → append `deploy skipped by user` to RECAP next-steps. Stop.
+3. If `yes` → run the **Deploy flow** below.
+
+**Red path:**
+
+1. Do NOT prompt.
+2. Append to RECAP next-steps: *"This build can't be auto-deployed to Vercel because [specific reason]. To deploy yourself, see Vercel docs, Railway, or Fly.io."* The reason MUST be specific (e.g., "uses websockets," "needs persistent local filesystem"), not generic.
+3. Stop.
+
+**Yellow path:**
+
+1. Prompt with the uncertainty: *"I'm not 100% sure this fits Vercel because of [specific reason]. Want me to try anyway? (yes / no)"*
+2. If `no` → append `deploy skipped due to uncertainty` to RECAP next-steps. Stop.
+3. If `yes` → run the **Deploy flow** below. If any step fails, fall through to the Red branch's recap message with the failure reason.
+
+### Deploy flow
+
+1. **Verify pre-reqs.** Check that `vercel` CLI is installed (`vercel --version`) and authed. If missing, tell the participant: *"Install with `npm i -g vercel` then run `vercel login`. Reply when ready."* Wait. Do NOT install the CLI yourself.
+
+2. **Ensure the project is on GitHub.** Run `git remote -v`. If no GitHub remote exists, ask: *"This deploy needs a GitHub repo so Vercel can auto-redeploy on push. Want me to create one? (yes / no)"*
+   - `yes` → run `gh repo create <project-name> --public --source . --push`.
+   - `no` → append `deploy skipped: no GitHub repo` to RECAP next-steps and stop.
+
+3. **Detect environment variables.** Grep the spec and code for `process.env.X`, `os.environ['X']`, `os.getenv('X')`, and any `.env.example` entries. Build a list of required env var names (NOT values).
+
+4. **Append env-var note to RECAP** (only if any were found). Add to next-steps: *"Before this deploy works at runtime, set these env vars in your Vercel dashboard: [list]. The build will deploy but the app may fail at runtime with a clear error until they're set."*
+
+5. **`vercel link`** — creates a Vercel project linked to the local directory. Writes `.vercel/project.json`. First run prompts the participant for project name and scope; defaults are fine.
+
+6. **`vercel git connect`** — wires the Vercel project to the GitHub repo for auto-deploy. First run triggers a browser flow to authorize Vercel's GitHub app. Wait for the participant to complete the browser flow.
+
+7. **`vercel --prod`** — runs the first production deploy. Vercel CLI handles framework detection automatically.
+
+8. **Capture the deployed URL** from CLI output. Use the stable `https://<project>.vercel.app` URL, not the per-deploy hash URL.
+
+9. **Append to `RECAP.md` as the top header** (above the existing five sections):
+
+   ```markdown
+   **Live URL:** https://<project>.vercel.app
+
+   _Auto-deploy is wired: every push to `main` redeploys; every PR creates a preview URL._
+
+   ---
+   ```
+
+10. **If any step fails**, capture stderr, write a one-paragraph failure note plus manual-deploy instructions into RECAP next-steps, and stop. Do NOT retry automatically.
+
+### Out of scope for Extension I
+
+- Custom domains
+- Vercel Postgres / Neon provisioning (note as a manual next step only)
+- Pushing env var values
+- Branch protection rules
+- Preview-deploy comment automation
+- Multi-environment deploys
+
 ## Ralph sidecar pointer
 
 For participants who finish early and want to see autonomous execution: install Ralph from `https://github.com/snarktank/ralph`, convert your spec to a `prd.json` via Ralph's `/ralph` skill, and run `ralph.sh` to watch a fresh Claude instance grind through stories autonomously. Out of scope for the main pipeline — recommend it in Extension F's "next steps" only.
@@ -148,3 +239,7 @@ Do NOT:
 - Apply blanket TDD to auxiliary code (Extension G scopes it).
 - Re-derive aesthetics per component (Extension H commits once).
 - Invoke `superpowers:finishing-a-development-branch` (Extension F replaces it).
+- Retry a failed Vercel deploy silently (Extension I writes a failure note and stops).
+- Push environment variable values to Vercel during Extension I (detect and report only).
+- Configure custom domains during Extension I (out of scope; default `*.vercel.app` URL only).
+- Run `vercel postgres create` on the participant's behalf (note as a manual next step only).
