@@ -9,7 +9,7 @@
     {
       "name": "workshop",
       "description": "Workshop pipeline + architecture reference for 4-hour workshop builds",
-      "source": "."
+      "source": "./plugins/workshop"
     }
   ]
 }
