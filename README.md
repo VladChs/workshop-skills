@@ -26,7 +26,7 @@ Skills for the **Build Your Idea** workshop: ship any idea in 4 hours with Claud
 ## Install
 
 ```
-/plugin marketplace add <USER>/workshop-skills
+/plugin marketplace add VladChs/workshop-skills
 /plugin install workshop@workshop-marketplace
 ```
 
