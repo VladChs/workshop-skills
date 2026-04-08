@@ -1,0 +1,11 @@
+{
+  "name": "workshop-marketplace",
+  "description": "Build Your Idea workshop skills.",
+  "plugins": [
+    {
+      "name": "workshop",
+      "source": ".",
+      "description": "Workshop pipeline + architecture reference"
+    }
+  ]
+}
