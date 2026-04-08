@@ -4,15 +4,40 @@ A Claude Code marketplace plugin that turns any idea into a live, deployed app i
 
 It wraps the [`superpowers`](https://github.com/anthropics/claude-plugins-public) plugin with workshop-tuned rules: opinionated brainstorming, universal architecture patterns, pragmatic testing, frontend aesthetics, and a one-shot Vercel deploy that wires GitHub auto-redeploy on the way out.
 
-## What you'll experience
+## Pre-reqs
 
-You start a fresh Claude Code session in an empty directory and say *"start the workshop build."* Claude takes you through five visible phases:
+| Tool | Required for | Install |
+|---|---|---|
+| Claude Code | everything | [docs.anthropic.com/claude-code](https://docs.anthropic.com/en/docs/claude-code) |
+| `superpowers` plugin | the pipeline wraps it | `/plugin marketplace add anthropics/claude-plugins-official` then `/plugin install superpowers@claude-plugins-official` |
+| `frontend-design` plugin | UI projects (Extension H) | `/plugin install frontend-design@claude-plugins-official` |
+| `vercel` CLI | Extension I (deploy) | `npm i -g vercel` then `vercel login` |
+| `gh` CLI authenticated | Extension I (GitHub repo creation) | `brew install gh && gh auth login` |
 
-1. **Brainstorm.** Who is this for? What pain are they feeling? What's the *one thing* that makes this valuable? What's the 4-hour slice that proves it? Claude refuses to let you skip these.
-2. **Plan.** Claude reads the universal architecture rules and writes an implementation plan whose file paths, layers, and module boundaries already encode them.
-3. **Execute.** A fresh subagent per task implements with TDD on the core value path and pragmatic testing elsewhere. If your project has a UI, Claude commits to an aesthetic direction once and follows it through every component.
-4. **Review.** Code is reviewed against the 25 architecture rules. Production-hardening nags become notes, not blockers — this is a 4-hour build, not a launch.
-5. **Finish.** Claude writes a `RECAP.md`, then offers to deploy to Vercel. If you say yes, you walk away with a live URL and auto-deploy already wired so every future push redeploys.
+The Vercel CLI and `gh` are optional — they only matter if you want the deploy moment at the end.
+
+## Install
+
+```
+/plugin marketplace add VladChs/workshop-skills
+/plugin install workshop@workshop-marketplace
+```
+
+## Use
+
+In a fresh Claude Code session, in a clean directory where you want your project to live, say:
+
+> *"Start the workshop build."*
+
+Claude invokes `workshop-pipeline` and walks you through the phases.
+
+## Update
+
+```
+/plugin update workshop@workshop-marketplace
+```
+
+---
 
 ## What's inside
 
@@ -72,65 +97,6 @@ The reference is intentionally narrow. Situational patterns (RBAC, audit trails,
 └──────────────────────────────┘
 ```
 
-## Pre-reqs
-
-| Tool | Required for | Install |
-|---|---|---|
-| Claude Code | everything | [docs.anthropic.com/claude-code](https://docs.anthropic.com/en/docs/claude-code) |
-| `superpowers` plugin | the pipeline wraps it | `/plugin marketplace add anthropics/claude-plugins-official` then `/plugin install superpowers@claude-plugins-official` |
-| `frontend-design` plugin | UI projects (Extension H) | `/plugin install frontend-design@claude-plugins-official` |
-| `vercel` CLI | Extension I (deploy) | `npm i -g vercel` then `vercel login` |
-| `gh` CLI authenticated | Extension I (GitHub repo creation) | `brew install gh && gh auth login` |
-
-The Vercel CLI and `gh` are optional — they only matter if you want the deploy moment at the end. The pipeline runs without them.
-
-## Install
-
-```
-/plugin marketplace add VladChs/workshop-skills
-/plugin install workshop@workshop-marketplace
-```
-
-## Use
-
-In a fresh Claude Code session, in a clean directory where you want your project to live, say:
-
-> *"Start the workshop build."*
-
-Claude invokes `workshop-pipeline` and asks the brainstorm questions in order. Answer them honestly — the discipline is the value. Then let the pipeline run.
-
-If you want the Vercel deploy at the end, make sure `vercel` and `gh` are installed and authed before the workshop starts. Extension I will detect whether your build fits Vercel, prompt you, and (if you say yes) wire everything up.
-
-### What to expect at each phase
-
-| Phase | Duration target | What Claude does | What you do |
-|---|---|---|---|
-| Brainstorm | ~45 min | Asks user/pain/value/scope/aesthetic | Answer truthfully; let scope get cut |
-| Plan | ~10 min | Reads architecture rules, writes a structured plan | Skim, approve |
-| Execute | ~2.5 hr | Spawns subagents per task, TDD on the core path | Watch, intervene only if stuck |
-| Review | ~10 min | Checks code against the 25 rules | Skim, accept blockers |
-| Finish | ~15 min | Writes `RECAP.md`, offers Vercel deploy | Say yes to the deploy, watch the URL appear |
-
-Total: about four hours, end to end.
-
-## Update
-
-```
-/plugin update workshop@workshop-marketplace
-```
-
-## Troubleshooting
-
-**Plugin won't install / "invalid manifest" error.** Update Claude Code itself (`claude --version`), remove the cached marketplace (`/plugin marketplace remove VladChs-workshop-skills`), then re-add and re-install. Older Claude versions accepted looser manifests; the current schema is strict.
-
-**`git push` fails with "Permission denied (publickey)".** Run `gh auth setup-git` once to use your `gh` token as the credential helper. The Vercel deploy step depends on `git push` working.
-
-**Claude doesn't auto-trigger `workshop-pipeline` after `/clear`.** Re-invoke explicitly: *"Use the workshop-pipeline skill."* For persistent triggering across sessions, drop a one-line `CLAUDE.md` in your project root that says *"If the user says 'start the workshop build,' invoke `workshop-pipeline`."*
-
-**Extension I says "doesn't fit Vercel" and you think it should.** The detection is conservative. Re-read its reasoning in the response and decide whether to deploy yourself with `vercel --prod` directly. The recap will still record the manual-deploy path.
-
-**FastAPI on Vercel runs out of memory or times out.** Hobby tier serverless functions have a 10s execution limit and 50 MB unzipped function size. If your build needs more, deploy to Railway or Fly instead — Extension I will not try to work around platform limits.
-
 ## Status
 
 Current version: **0.2.0**
@@ -155,4 +121,4 @@ MIT — see [LICENSE](LICENSE).
 
 ## Contributing
 
-Issues and PRs welcome. The fastest way to help: run a workshop build, hit a rough edge, and open an issue with the spec, the recap, and the rough edge.
+Issues and PRs welcome.
