@@ -73,17 +73,13 @@ Stage handoff: when one stage completes, immediately invoke the next (`superpowe
 
 Tag: `v1 — revisit after dedicated product-design brainstorm`
 
-Apply during `superpowers:brainstorming`. Add these rules to the base brainstorming flow:
+Apply during `superpowers:brainstorming`. Read `references/brainstorm-overlay.md` in full at the start of the brainstorm phase and apply every rule it contains. The reference defines:
 
-1. **User and pain first.** Before any solution talk, force the participant to state who the user is and what pain they feel. No "I want to build X" without this.
-2. **The one thing.** Force articulation of the single sentence that makes this valuable. If the participant cannot name it, the brainstorm is not done.
-3. **4-hour scope cut.** Propose the minimum viable slice that can be built in 4 hours and demonstrate the one thing. Aggressively remove everything else.
-4. **Why not an existing tool.** Force the question: "Why can't you use $EXISTING_THING for this?" If the answer is "I haven't looked," that is a signal to look first.
-5. **Visual companion for frontend projects.** When the base brainstorming skill offers its visual companion, accept it. Workshop frontends benefit from mockups during brainstorm.
-6. **Aesthetic intent (UI projects only).** Capture a 1-line aesthetic intent in the spec — examples: "brutalist editorial," "soft pastel toy-like," "industrial utilitarian." Without this line, frontends default to vanilla AI output. This line is consumed by Extension H during execution.
-7. **Commit guidance.** Tell the participant: commits are short, present tense, one logical change. The wrapper does not enforce a commit-message format beyond this.
+- The seven product-design rules layered on top of base brainstorming
+- The list of items the spec MUST contain when brainstorming concludes
+- What this overlay is explicitly NOT
 
-The spec produced by brainstorming MUST contain: user, pain, the-one-thing sentence, 4h-scoped feature list, "why not existing tool" answer, and (if UI) the aesthetic intent line.
+Do not summarize or skip the reference. Read the file each time the brainstorm phase starts.
 
 ## Extension B — Writing plans: workshop-architecture auto-load
 
